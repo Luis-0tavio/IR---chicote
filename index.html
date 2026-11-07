@@ -1,0 +1,966 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Checklist de instalação do chicote · FSAE</title>
+  <script type="module" src="./Editor/Visualização Web/model-viewer.min.js"></script>
+
+  <style>
+    /* =========================================================
+       1. CORES E FONTES
+       Para mudar o visual do site, mexa só neste bloco.
+       ========================================================= */
+
+    /* Tema claro (padrão) */
+    :root {
+      --bg: #E9EDF0;          /* fundo da página */
+      --surface: #FFFFFF;     /* fundo dos cartões */
+      --s2: #F2F5F7;          /* cinza claro de apoio */
+      --ink: #101B25;         /* cor do texto */
+      --muted: #51606E;       /* texto secundário */
+      --line: #C9D2D9;        /* linhas e bordas */
+      --accent: #ff500a;      /* cor de destaque (foco, caixinhas) */
+      --done: #17794A;        /* item concluído */
+      --crit: #B42318;        /* itens críticos */
+      --critbg: #FCE9E7;      /* fundo da etiqueta "Crítico" */
+
+      --font: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      --disp: "Arial Narrow", "Barlow Condensed", Impact, sans-serif;   /* títulos */
+      --mono: ui-monospace, Menlo, Consolas, monospace;                 /* números e etiquetas */
+
+      color-scheme: light;
+    }
+
+    /* Tema escuro automático (quando o celular/PC está no modo escuro) */
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #150c34;
+        --surface: #1c162a;
+        --s2: #1C2833;
+        --ink: #E7EDF1;
+        --muted: #9AA8B4;
+        --line: #2B3946;
+        --accent: #ff9501;
+        --done: #ffb700;
+        --crit: #ff9100;
+        --critbg: #3A1C1A;
+        color-scheme: dark;
+      }
+    }
+
+    /* Tema escuro forçado (caso um dia exista um botão de tema) */
+    :root[data-theme="dark"] {
+      --bg: #0E151B;
+      --surface: #16202A;
+      --s2: #1C2833;
+      --ink: #E7EDF1;
+      --muted: #9AA8B4;
+      --line: #2B3946;
+      --accent: #FF8A4C;
+      --done: #4CC38A;
+      --crit: #FF9A90;
+      --critbg: #3A1C1A;
+      color-scheme: dark;
+    }
+
+
+    /* =========================================================
+       2. BASE
+       ========================================================= */
+
+    :root {
+      box-sizing: border-box;
+      /* respeita a área segura de celulares com "notch" */
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    html {
+      scroll-padding-top: env(safe-area-inset-top, 0px);
+      scroll-behavior: smooth;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font: 400 16px/1.5 var(--font);
+    }
+
+    button, input { font-family: inherit; }
+
+    :focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    /* Container central da página */
+    .wrap {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 28px max(16px, env(safe-area-inset-right, 0px)) 56px max(16px, env(safe-area-inset-left, 0px));
+    }
+
+
+    /* =========================================================
+       3. CABEÇALHO (título + porcentagem geral)
+       ========================================================= */
+
+    .hero {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 16px 32px;
+      padding-bottom: 20px;
+    }
+
+    .eyebrow {
+      margin: 0;
+      font: 500 12px/1 var(--mono);
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    h1 {
+      margin: 12px 0 0;
+      font: 700 clamp(40px, 9vw, 68px)/.95 var(--disp);
+      text-transform: uppercase;
+      text-wrap: balance;
+    }
+
+    .lede {
+      margin: 12px 0 0;
+      max-width: 54ch;
+      color: var(--muted);
+    }
+
+    /* Porcentagem grande à direita */
+    .score { text-align: right; }
+    
+    .imagem-redonda {
+      width: 150px;       /* Defina uma largura fixa */
+      height: 150px;      /* Defina a mesma altura para ser um quadrado perfeito */
+      border-radius: 50%; /* Transforma o quadrado em um círculo perfeito */
+      object-fit: cover;  /* Evita que a imagem fique distorcida ou esticada */
+    }
+
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 30px;
+    }
+
+    .pct {
+      font: 700 clamp(56px, 10vw, 84px)/.9 var(--disp);
+      font-variant-numeric: tabular-nums;
+    }
+    .pct small {
+      font-size: .45em;
+      color: var(--muted);
+    }
+
+    /* Linha "X de Y itens · N críticos pendentes" */
+    .sl {
+      margin: 8px 0 0;
+      font: 500 13px/1.4 var(--mono);
+      color: var(--muted);
+    }
+    .sl b {
+      color: var(--crit);
+      font-weight: 600;
+    }
+
+
+    /* =========================================================
+       4. NAVEGAÇÃO POR ETAPAS (barrinhas coloridas)
+       ========================================================= */
+
+    .wires {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px 10px;
+      margin: 0 0 20px;
+      padding: 0;
+      list-style: none;
+    }
+    @media (min-width: 560px) { .wires { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+    @media (min-width: 800px) { .wires { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+
+    .wire {
+      display: grid;
+      gap: 6px;
+      width: 100%;
+      padding: 4px 0;
+      border: 0;
+      background: none;
+      color: inherit;
+      text-align: left;
+      cursor: pointer;
+    }
+    .wire:hover .wl { text-decoration: underline; }
+
+    /* Trilho (fundo da barra) */
+    .rail {
+      display: block;
+      height: 12px;
+      border-radius: 6px;
+      overflow: hidden;
+      background: color-mix(in srgb, var(--w) 24%, var(--s2));
+      box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--w) 45%, transparent);
+    }
+
+    /* Parte preenchida da barra */
+    .fill {
+      display: block;
+      height: 100%;
+      width: 0;
+      background: var(--w);
+      transition: width .25s;
+    }
+
+    .wl { font: 600 13px/1.2 var(--font); }                                   /* nome da etapa */
+    .wl b { font: 500 12px var(--mono); color: var(--muted); margin-right: 5px; }  /* número */
+    .wc { font: 500 12px var(--mono); color: var(--muted); }                  /* "3 de 11" */
+
+
+    /* =========================================================
+       5. BARRA DE CONTROLES (filtro e botão limpar)
+       ========================================================= */
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px 18px;
+      padding: 10px 0;
+      margin-bottom: 22px;
+      border-block: 1px solid var(--line);
+    }
+
+    .check {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 44px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .check input {
+      width: 20px;
+      height: 20px;
+      margin: 0;
+      accent-color: var(--accent);
+    }
+
+    .btn {
+      min-height: 44px;
+      padding: 0 14px;
+      margin-left: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--crit);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    /* Estado "toque de novo para confirmar" */
+    .btn.armed {
+      background: var(--crit);
+      border-color: var(--crit);
+      color: var(--surface);
+    }
+
+
+    /* =========================================================
+       6. CARTÕES DAS ETAPAS E ITENS
+       ========================================================= */
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      margin-bottom: 18px;
+      overflow: hidden;
+    }
+
+    /* Cabeçalho do cartão: a faixa de cima usa a cor da etapa (--w) */
+    .panel > header {
+      padding: 16px 18px 12px;
+      border-top: 6px solid var(--w);
+    }
+    .panel h2 {
+      margin: 0;
+      font: 700 28px/1.05 var(--disp);
+      text-transform: uppercase;
+    }
+    .panel h2 b {
+      font: 500 13px var(--mono);
+      color: var(--muted);
+      margin-right: 8px;
+    }
+    .desc {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .viewer-controls {
+      padding: 14px 18px 0;
+    }
+    .viewer-controls label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+    .select-model {
+      width: 100%;
+      min-height: 44px;
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--ink);
+      font: inherit;
+    }
+    .model-status {
+      min-height: 1.5em;
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    model-viewer {
+      display: block;
+      width: 100%;
+      height: min(60vh, 480px);
+      min-height: 300px;
+      margin-top: 12px;
+      background: var(--s2);
+    }
+
+    /* Lista de itens */
+    .items {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .items li { border-top: 1px solid var(--line); }
+
+    /* Cada linha clicável (caixinha + texto) */
+    .row {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      min-height: 48px;
+      padding: 10px 18px;
+      cursor: pointer;
+    }
+    .row input {
+      flex: none;
+      width: 22px;
+      height: 22px;
+      margin: 2px 0 0;
+      accent-color: var(--done);
+    }
+    .txt { min-width: 0; }
+
+    /* Linha do item: caixinha + texto à esquerda, setinha à direita */
+    .linha {
+      display: flex;
+      align-items: flex-start;
+    }
+    .linha .row {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .acoes-item {
+      flex: none;
+      display: flex;
+      align-items: flex-start;
+    }
+    .ver-modelo {
+      min-width: 48px;
+      min-height: 48px;
+      border: 0;
+      background: none;
+      color: var(--accent);
+      font: 600 12px var(--mono);
+      cursor: pointer;
+    }
+
+    /* Setinha para baixo (mostra/esconde referências e observações) */
+    .seta {
+      flex: none;
+      width: 52px;
+      min-height: 48px;
+      display: grid;
+      place-items: center;
+      border: 0;
+      background: none;
+      color: var(--muted);
+      cursor: pointer;
+    }
+    .seta:hover { color: var(--ink); }
+    .seta svg {
+      width: 20px;
+      height: 20px;
+      transition: transform .2s;
+    }
+    .seta[aria-expanded="true"] svg { transform: rotate(180deg); }
+
+    /* Área de referências e observações que abre embaixo do item */
+    .galeria {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 10px;
+      padding: 4px 18px 16px 54px;
+    }
+    .observacao {
+      grid-column: 1 / -1;
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .galeria[hidden] { display: none; }
+    .galeria img {
+      display: block;
+      width: 100%;
+      height: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--s2);
+    }
+    .galeria .vazio {
+      grid-column: 1 / -1;
+      margin: 0;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* Item marcado fica riscado e apagado */
+    .row:has(input:checked) .main {
+      text-decoration: line-through;
+      color: var(--muted);
+    }
+
+    /* Texto pequeno de dica embaixo do item */
+    .hint {
+      display: block;
+      margin-top: 2px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* Etiqueta vermelha "CRÍTICO" */
+    .tag {
+      display: inline-block;
+      margin-left: 8px;
+      padding: 1px 7px;
+      border-radius: 99px;
+      background: var(--critbg);
+      color: var(--crit);
+      font: 600 11px/1.5 var(--mono);
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      vertical-align: 1px;
+    }
+
+    /* Filtro "só críticos": esconde os itens sem a classe .c */
+    .only-c .items li:not(.c) { display: none; }
+
+    footer {
+      margin-top: 24px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    /* =========================================================
+   FAIXAS LATERAIS DECORATIVAS (coladas ao conteúdo central)
+   ========================================================= */
+
+:root {
+  --faixa-largura: 150px;     /* espessura da faixa */
+  --faixa-distancia: 30px;   /* distância entre a faixa e o conteúdo */
+  --conteudo-meia: 464px;    /* metade da largura útil do conteúdo (960px - 2 × 16px de margem) / 2 */
+}
+
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  width: var(--faixa-largura);
+  z-index: -1;
+  pointer-events: none;
+
+  /* ESCOLHA UM ESTILO (os mesmos da resposta anterior) */
+  background: var(--accent);
+}
+
+/* Faixa da esquerda: termina a 30px do conteúdo */
+body::before {
+  right: calc(50% + var(--conteudo-meia) + var(--faixa-distancia));
+}
+
+/* Faixa da direita: começa a 30px do conteúdo */
+body::after {
+  left: calc(50% + var(--conteudo-meia) + var(--faixa-distancia));
+}
+
+/* Sem espaço lateral suficiente: esconde as faixas */
+@media (max-width: 1076px) {
+  body::before,
+  body::after { display: none; }
+}
+
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+
+    <!-- Cabeçalho -->
+    <header class="hero">
+      <div>
+        <p class="eyebrow">FSAE · IRON RACERS</p>
+        <h1>Montagem do chicote</h1>
+        <p class="lede">Confira cada conector e rota com o esquema aprovado do IR05. Marque só após inspecionar.</p>
+      </div>
+      <div class="score">
+        <div class="logo">
+          <img src=".\logo.jpeg" alt="Logo Iron Racers" width="120" class="imagem-redonda">
+          <div class="pct" id="pct">0<small>%</small></div>
+        </div>
+        <p class="sl" id="sl"></p>
+      </div>
+    </header>
+
+    <!-- Barrinhas de navegação (preenchidas pelo JavaScript) -->
+    <ul class="wires" id="wires"></ul>
+
+    <!-- Filtro e botão de limpar -->
+    <div class="controls">
+      <label class="check">
+        <input type="checkbox" id="onlyc"> Mostrar só itens críticos
+      </label>
+      <button class="btn" id="reset" type="button">Limpar tudo</button>
+    </div>
+
+    <!-- Etapas e itens (preenchidos pelo JavaScript) -->
+    <main id="main"></main>
+
+    <section class="panel" id="visualizacao-3d" style="--w:#7B4FD1">
+      <header>
+        <h2>Visualização 3D</h2>
+        <p class="desc">Selecione uma peça, arraste para girar e use o scroll ou pinça para aproximar. O visualizador exige acesso por servidor local (por exemplo, Live Server).</p>
+      </header>
+      <div class="viewer-controls">
+        <label for="modelo-seletor">Modelo</label>
+        <select class="select-model" id="modelo-seletor"></select>
+        <p class="model-status" id="modelo-status" role="status" aria-live="polite">Carregando modelo 3D…</p>
+      </div>
+      <model-viewer id="modelo-3d" src="./Editor/Visualização Web/BASE.glb"
+                    alt="Modelo 3D do chicote e seus componentes" camera-controls
+                    touch-action="pan-y" shadow-intensity="1" exposure="1">
+      </model-viewer>
+    </section>
+
+    <footer>Guia de montagem do chicote eletrico do IR05 - 2026</footer>
+  </div>
+
+
+  <script>
+  (function () {
+
+    /* =========================================================
+       1. DADOS DO CHECKLIST  ←  É AQUI QUE VOCÊ EDITA O CONTEÚDO
+
+       Cada etapa tem:
+         nome       → texto curto da barrinha de navegação
+         titulo     → título do cartão
+         cor        → cor da etapa (hexadecimal)
+         descricao  → texto abaixo do título
+         itens      → lista de itens da etapa
+
+       Cada item tem:
+         texto      → o que deve ser conferido
+         dica       → (opcional) texto pequeno embaixo
+         critico    → (opcional) true para aparecer a etiqueta "Crítico"
+         observacao → (opcional) nota mostrada ao abrir a seta
+         imagens    → (opcional) lista de imagens de referência
+         modelo     → (opcional) chave de um modelo 3D da lista MODELOS_3D
+
+       Exemplos de item:
+         { texto: "Radio" },
+         { texto: "Cabos relé", critico: true },
+         { texto: "Bateria", dica: "Conferir identificação", critico: true,
+           observacao: "Anotar resultado da inspeção.", imagens: ["./images/bateria.jpg"] },
+       ========================================================= */
+
+    const DESCRICAO_CONECTORES =
+      "Identifique cada conector pelo esquema aprovado do IR05. Confira etiqueta, orientação, travamento e rota prevista antes de fixar as ramificações.";
+
+    const MODELOS_3D = {
+      base: { nome: "Conjunto (BASE)", arquivo: "BASE.glb" },
+      bicos: { nome: "Bicos injetores", arquivo: "Bicos injetores.glb" },
+      bobinas: { nome: "Bobinas", arquivo: "Bobinas.glb" },
+      bomba: { nome: "Bomba de combustível", arquivo: "Bomba de Combustivel.glb" },
+      eletroventilador: { nome: "Eletroventilador", arquivo: "Eletroventilador.glb" },
+      indutivo: { nome: "Indutivo de velocidade de roda", arquivo: "Indutivo de velocidade de roda.glb" },
+      map: { nome: "MAP", arquivo: "MAP - desenvolvendo.glb" },
+      partida: { nome: "Motor de partida e relé", arquivo: "Motor de partida - Rele de partida.glb" },
+      pressaoCombustivel: { nome: "Pressão de combustível", arquivo: "Pressão de combustivel.glb" },
+      pressaoOleo: { nome: "Pressão de óleo", arquivo: "Pressão de óleo.glb" },
+      rodaFonica: { nome: "Roda fônica", arquivo: "Roda fonica.glb" },
+      sondaLambda: { nome: "Sonda lambda", arquivo: "Sonda Lambda.glb" },
+      temperaturaAr: { nome: "Temperatura do ar", arquivo: "Temperatura do ar.glb" },
+      temperaturaMotor: { nome: "Temperatura do motor", arquivo: "Temperatura do motor.glb" },
+      tps: { nome: "TPS", arquivo: "TPS.glb" },
+    };
+
+    const ETAPAS = [
+
+      {
+        nome: "Parte Frontal",
+        titulo: "Parte Frontal",
+        cor: "#F2C230",
+        descricao: DESCRICAO_CONECTORES,
+        itens: [
+          { texto: "FT500 Lite, dois conectores específicos", dica: "Conferir identificação, orientação e travas de cada conector conforme o diagrama aprovado." },
+          { texto: "Rádio", dica: "Confirmar canal e identificação conforme o plano de comunicação da equipe." },
+          { texto: "Botão de partida", dica: "Conferir etiqueta e retenção do conector; validar a função pelo procedimento aprovado." },
+          { texto: "Indicador de marcha inc/decr", dica: "Conferir identificação dos comandos e validar indicação conforme o roteiro de teste da equipe." },
+          { texto: "ODG", dica: "Usar a nomenclatura do diagrama do IR05 e conferir etiqueta, conector e rota." },
+          { texto: "Indutivo dianteiro", dica: "Conferir rota e fixação conforme o projeto, sem interferência com componentes móveis.", modelo: "indutivo" },
+          { texto: "ICP", dica: "Usar a nomenclatura do diagrama do IR05 e conferir etiqueta, conector e rota." },
+          { texto: "C16 PDM", dica: "Conferir identificação dos conectores e posição no diagrama aprovado." },
+          { texto: "Interruptor de freio", dica: "Conferir identificação, fixação e sinal pelo procedimento de teste aprovado." },
+          { texto: "Pressão da linha de freio", dica: "Conferir identificação do sensor e correspondência da ligação com o diagrama." },
+        ],
+      },
+
+      {
+        nome: "Parte Traseira",
+        titulo: "Parte Traseira",
+        cor: "#F2C230",
+        descricao: DESCRICAO_CONECTORES,
+        itens: [
+          { texto: "Relé de partida", dica: "Conferir identificação e posição dos terminais pelo diagrama aprovado.", modelo: "partida" },
+          { texto: "Spark Pro", dica: "Conferir identificação dos conectores e rota conforme o esquema aprovado." },
+          { texto: "Pressão de óleo", dica: "Conferir identificação do sensor e correspondência da ligação com o diagrama.", modelo: "pressaoOleo" },
+          { texto: "C4 PDM", dica: "Conferir identificação dos conectores e posição no diagrama aprovado." },
+          { texto: "Bico 1", dica: "Conferir numeração e posição conforme o diagrama; verificar trava do conector.", modelo: "bicos" },
+          { texto: "Bico 2", dica: "Conferir numeração e posição conforme o diagrama; verificar trava do conector.", modelo: "bicos" },
+          { texto: "Bico 3", dica: "Conferir numeração e posição conforme o diagrama; verificar trava do conector.", modelo: "bicos" },
+          { texto: "Bico 4", dica: "Conferir numeração e posição conforme o diagrama; verificar trava do conector.", modelo: "bicos" },
+          { texto: "TPS", dica: "Conferir identificação do sensor e correspondência da ligação com o diagrama.", modelo: "tps" },
+          { texto: "Temperatura do ar", dica: "Conferir identificação do sensor e correspondência da ligação com o diagrama.", modelo: "temperaturaAr" },
+          { texto: "Bobina 1", dica: "Conferir numeração, conector e posição conforme o diagrama.", modelo: "bobinas" },
+          { texto: "Bobina 2", dica: "Conferir numeração, conector e posição conforme o diagrama.", modelo: "bobinas" },
+          { texto: "Positivo da bateria", dica: "Confirmar identificação e ligação com o esquema; manter desconectado até a etapa autorizada.", critico: true },
+          { texto: "Negativo da bateria", dica: "Confirmar identificação e ligação com o esquema; manter desconectado até a etapa autorizada.", critico: true },
+          { texto: "Indutivo traseiro", dica: "Conferir rota e fixação conforme o projeto, sem interferência com componentes móveis.", modelo: "indutivo" },
+          { texto: "Luz de freio", dica: "Conferir identificação e validar funcionamento pelo procedimento aprovado." },
+          { texto: "Temperatura do motor", dica: "Conferir identificação do sensor e correspondência da ligação com o diagrama.", modelo: "temperaturaMotor" },
+          { texto: "Pressão de combustível", dica: "Conferir identificação do sensor e correspondência da ligação com o diagrama.", modelo: "pressaoCombustivel" },
+          { texto: "Nível de combustível", dica: "Conferir identificação do sensor e correspondência da ligação com o diagrama." },
+          { texto: "Eletroventilador", dica: "Conferir identificação, rota e fixação; validar pelo procedimento aprovado.", modelo: "eletroventilador" },
+          { texto: "Bomba de combustível", dica: "Conferir identificação, rota e fixação; validar pelo procedimento aprovado.", modelo: "bomba" },
+          { texto: "Cabos do relé", dica: "Inspecionar identificação, terminais e conexões contra o diagrama antes de autorizar energização.", critico: true, modelo: "partida" },
+          { texto: "Cabos da chave geral", dica: "Inspecionar identificação e conexões contra o diagrama; validar o funcionamento pelo procedimento aprovado.", critico: true },
+        ],
+      },
+
+      {
+        nome: "Pré-energização",
+        titulo: "Inspeção antes de energizar",
+        cor: "#7B4FD1",
+        descricao: "Não energize com base apenas neste checklist. Faça a inspeção e os testes com o responsável por elétrica, usando o diagrama e o procedimento de segurança aprovados pela equipe.",
+        itens: [
+          { texto: "Teste de continuidade/isolação registrado conforme procedimento aprovado, sem curto entre positivo e chassi", dica: "Registrar resultado e instrumento conforme o procedimento da equipe; não improvisar limites ou método.", critico: true },
+          { texto: "Identificação e funcionamento da chave geral conferidos conforme esquema e procedimento aprovado", dica: "Execução e autorização pelo responsável por elétrica.", critico: true },
+          { texto: "Identificação e ligação do relé de partida conferidas conforme o diagrama aprovado", dica: "Não energizar para investigar ligações desconhecidas.", critico: true },
+          { texto: "Bateria inspecionada e conexão autorizada pelo responsável por elétrica", dica: "Seguir a sequência e os critérios definidos pela equipe.", critico: true },
+        ],
+      },
+
+    ];
+
+
+    /* =========================================================
+       2. ARMAZENAMENTO DO PROGRESSO (no navegador)
+       Guarda quais itens estão marcados. Se mudar muito a lista
+       de itens, troque o "v1" por "v2" para zerar o progresso salvo.
+       ========================================================= */
+
+    const CHAVE_STORAGE = "chicote-instalacao-v1";
+    let marcados = {};   // exemplo: { "i0_3": 1, "i1_5": 1 }
+
+    try {
+      marcados = JSON.parse(localStorage.getItem(CHAVE_STORAGE) || "{}") || {};
+    } catch (erro) { /* sem storage: segue sem salvar */ }
+
+    function salvar() {
+      try {
+        localStorage.setItem(CHAVE_STORAGE, JSON.stringify(marcados));
+      } catch (erro) { /* sem storage: ignora */ }
+    }
+
+
+    /* =========================================================
+       3. FUNÇÕES AUXILIARES
+       ========================================================= */
+
+    const porId = (id) => document.getElementById(id);
+
+    // Número da etapa com dois dígitos: 0 → "01", 1 → "02"...
+    const numero = (indice) => String(indice + 1).padStart(2, "0");
+
+    // Identificador único de cada item (usado para salvar o progresso)
+    const chaveItem = (etapa, item) => `i${etapa}_${item}`;
+
+
+    /* =========================================================
+       4. MONTAGEM DA PÁGINA
+       ========================================================= */
+
+    // Uma barrinha de navegação
+    function htmlNavegacao(etapa, i) {
+      return `
+        <li>
+          <button class="wire" style="--w:${etapa.cor}" data-go="etapa-${i}">
+            <span class="rail"><span class="fill" id="fill-${i}"></span></span>
+            <span class="wl"><b>${numero(i)}</b>${etapa.nome}</span>
+            <span class="wc" id="cont-${i}"></span>
+          </button>
+        </li>`;
+    }
+
+    // Uma linha de checklist
+    function htmlItem(item, i, j) {
+      const classe = item.critico ? ' class="c"' : "";
+      const tag = item.critico ? '<span class="tag">Crítico</span>' : "";
+      const dica = item.dica ? `<span class="hint">${item.dica}</span>` : "";
+
+      const imagens = item.imagens || [];
+      const htmlImagens = imagens
+        .map((src) => `<img src="${src}" alt="${item.texto}" loading="lazy">`)
+        .join("");
+      const botaoModelo = item.modelo
+        ? `<button class="ver-modelo" type="button" data-modelo="${item.modelo}" aria-label="Ver modelo 3D de ${item.texto}">3D</button>`
+        : "";
+      const conteudoGaleria = [
+        item.observacao ? `<p class="observacao"><strong>Observação:</strong> ${item.observacao}</p>` : "",
+        htmlImagens,
+        !item.observacao && !imagens.length
+          ? '<p class="observacao">Sem observações ou imagens adicionadas. Edite os campos <code>observacao</code> e <code>imagens</code> deste item nos dados do checklist.</p>'
+          : "",
+      ].join("");
+      const botaoDetalhes = `<button class="seta" type="button" aria-expanded="false"
+                    aria-label="Mostrar observações e imagens de ${item.texto}"
+                    aria-controls="g_${i}_${j}" data-img="g_${i}_${j}">
+             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+               <path d="M6 9l6 6 6-6"/>
+             </svg>
+           </button>`;
+      const galeria = `<div class="galeria" id="g_${i}_${j}" hidden>${conteudoGaleria}</div>`;
+
+      return `
+        <li${classe}>
+          <div class="linha">
+            <label class="row">
+              <input type="checkbox" data-k="${chaveItem(i, j)}">
+              <span class="txt">
+                <span class="main">${item.texto}</span>${tag}${dica}
+              </span>
+            </label>
+            <div class="acoes-item">${botaoModelo}${botaoDetalhes}</div>
+          </div>
+          ${galeria}
+        </li>`;
+    }
+
+    // Um cartão de etapa completo
+    function htmlEtapa(etapa, i) {
+      const itens = etapa.itens.map((item, j) => htmlItem(item, i, j)).join("");
+
+      return `
+        <section class="panel" id="etapa-${i}" style="--w:${etapa.cor}">
+          <header>
+            <h2><b>${numero(i)}</b>${etapa.titulo}</h2>
+            <p class="desc">${etapa.descricao}</p>
+          </header>
+          <ul class="items">${itens}</ul>
+        </section>`;
+    }
+
+    porId("wires").innerHTML = ETAPAS.map(htmlNavegacao).join("");
+    porId("main").innerHTML  = ETAPAS.map(htmlEtapa).join("");
+
+    const seletorModelo = porId("modelo-seletor");
+    const visualizador = porId("modelo-3d");
+    const statusModelo = porId("modelo-status");
+
+    seletorModelo.innerHTML = Object.entries(MODELOS_3D)
+      .map(([id, modelo]) => `<option value="${id}">${modelo.nome}</option>`)
+      .join("");
+
+    function carregarModeloSelecionado() {
+      const modelo = MODELOS_3D[seletorModelo.value];
+      if (!modelo) {
+        statusModelo.textContent = "Modelo não encontrado na lista.";
+        return;
+      }
+
+      statusModelo.textContent = `Carregando: ${modelo.nome}…`;
+      visualizador.alt = `Modelo 3D: ${modelo.nome}`;
+      visualizador.src = encodeURI(`./Editor/Visualização Web/${modelo.arquivo}`);
+    }
+
+    visualizador.addEventListener("load", () => {
+      statusModelo.textContent = "Modelo carregado. Arraste para girar e use o scroll ou pinça para aproximar.";
+    });
+    visualizador.addEventListener("error", () => {
+      statusModelo.textContent = "Não foi possível carregar o modelo. Abra o site por um servidor local (por exemplo, Live Server) ou confira se o arquivo GLB está disponível.";
+    });
+    seletorModelo.addEventListener("change", carregarModeloSelecionado);
+    carregarModeloSelecionado();
+
+    // Aplica no HTML o que estava salvo
+    document.querySelectorAll("input[data-k]").forEach((caixa) => {
+      caixa.checked = !!marcados[caixa.dataset.k];
+    });
+
+
+    /* =========================================================
+       5. PROGRESSO (porcentagem, barrinhas e críticos pendentes)
+       ========================================================= */
+
+    function atualizarProgresso() {
+      let feitos = 0;
+      let total = 0;
+      let criticosPendentes = 0;
+
+      ETAPAS.forEach((etapa, i) => {
+        let feitosNaEtapa = 0;
+
+        etapa.itens.forEach((item, j) => {
+          const marcado = !!marcados[chaveItem(i, j)];
+          total++;
+
+          if (marcado) {
+            feitos++;
+            feitosNaEtapa++;
+          } else if (item.critico) {
+            criticosPendentes++;
+          }
+        });
+
+        porId(`fill-${i}`).style.width = (100 * feitosNaEtapa / etapa.itens.length) + "%";
+        porId(`cont-${i}`).textContent = `${feitosNaEtapa} de ${etapa.itens.length}`;
+      });
+
+      const porcentagem = Math.round(100 * feitos / total);
+      porId("pct").innerHTML = `${porcentagem}<small>%</small>`;
+
+      const textoCriticos = criticosPendentes
+        ? ` · <b>${criticosPendentes} críticos pendentes</b>`
+        : " · nenhum crítico pendente";
+      porId("sl").innerHTML = `${feitos} de ${total} itens${textoCriticos}`;
+    }
+
+
+    /* =========================================================
+       6. INTERAÇÕES
+       ========================================================= */
+
+    // Marcar / desmarcar um item
+    document.addEventListener("change", (evento) => {
+      const caixa = evento.target;
+      if (!caixa.dataset || !caixa.dataset.k) return;
+
+      if (caixa.checked) marcados[caixa.dataset.k] = 1;
+      else delete marcados[caixa.dataset.k];
+
+      salvar();
+      atualizarProgresso();
+    });
+
+    // Clicar na setinha abre/fecha as imagens do item
+    document.addEventListener("click", (evento) => {
+      const botaoModelo = evento.target.closest("[data-modelo]");
+      if (botaoModelo) {
+        seletorModelo.value = botaoModelo.dataset.modelo;
+        carregarModeloSelecionado();
+        porId("visualizacao-3d").scrollIntoView();
+        return;
+      }
+
+      const seta = evento.target.closest(".seta");
+      if (!seta) return;
+      const galeria = porId(seta.dataset.img);
+      const abrir = galeria.hidden;
+      galeria.hidden = !abrir;
+      seta.setAttribute("aria-expanded", abrir ? "true" : "false");
+    });
+
+    // Clicar numa barrinha rola até a etapa
+    document.addEventListener("click", (evento) => {
+      const botao = evento.target.closest("[data-go]");
+      if (botao) porId(botao.dataset.go).scrollIntoView();
+    });
+
+    // Filtro "só itens críticos"
+    porId("onlyc").addEventListener("change", function () {
+      porId("main").classList.toggle("only-c", this.checked);
+    });
+
+    // Botão "Limpar tudo" (pede para tocar duas vezes)
+    let aguardandoConfirmacao = false;
+
+    porId("reset").addEventListener("click", function () {
+      const botao = this;
+
+      function voltarAoNormal() {
+        aguardandoConfirmacao = false;
+        botao.classList.remove("armed");
+        botao.textContent = "Limpar tudo";
+      }
+
+      // Primeiro toque: pede confirmação por 3,5 segundos
+      if (!aguardandoConfirmacao) {
+        aguardandoConfirmacao = true;
+        botao.classList.add("armed");
+        botao.textContent = "Toque de novo para confirmar";
+        setTimeout(voltarAoNormal, 3500);
+        return;
+      }
+
+      // Segundo toque: limpa tudo
+      marcados = {};
+      salvar();
+      voltarAoNormal();
+      document.querySelectorAll("input[data-k]").forEach((caixa) => { caixa.checked = false; });
+      atualizarProgresso();
+    });
+
+
+    /* =========================================================
+       7. INÍCIO
+       ========================================================= */
+
+    atualizarProgresso();
+
+  })();
+  </script>
+</body>
+</html>
