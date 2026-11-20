@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Checklist de instalação do chicote · FSAE</title>
-  <script type="module" src="./Editor/Visualização Web/model-viewer.min.js"></script>
+  <script type="module" src="./Editor/modelos3d/model-viewer.min.js"></script>
 
   <style>
     /* =========================================================
@@ -567,7 +567,7 @@ body::after {
         <select class="select-model" id="modelo-seletor"></select>
         <p class="model-status" id="modelo-status" role="status" aria-live="polite">Carregando modelo 3D…</p>
       </div>
-      <model-viewer id="modelo-3d" src="./Editor/Visualização Web/BASE.glb"
+      <model-viewer id="modelo-3d" src="./Editor/modelos3d/BASE.glb"
                     alt="Modelo 3D do chicote e seus componentes" camera-controls
                     touch-action="pan-y" shadow-intensity="1" exposure="1">
       </model-viewer>
@@ -634,10 +634,10 @@ body::after {
         cor: "#F2C230",
         descricao: DESCRICAO_CONECTORES,
         itens: [
-          { texto: "FT500 Lite, dois conectores específicos", dica: "Conferir identificação, orientação e travas de cada conector conforme o diagrama aprovado." },
+          { texto: "FT500, dois conectores específicos", dica: "Conferir identificação, orientação e travas de cada conector conforme o diagrama.", imagens: ["./Editor/imagens/FT500.jpeg"] },
           { texto: "Rádio", dica: "Confirmar canal e identificação conforme o plano de comunicação da equipe." },
           { texto: "Botão de partida", dica: "Conferir etiqueta e retenção do conector; validar a função pelo procedimento aprovado." },
-          { texto: "Indicador de marcha inc/decr", dica: "Conferir identificação dos comandos e validar indicação conforme o roteiro de teste da equipe." },
+          { texto: "Indicador de marcha inc/decr", dica: "Conferir identificação dos comandos e validar indicação conforme o roteiro de teste da equipe." }, 
           { texto: "ODG", dica: "Usar a nomenclatura do diagrama do IR05 e conferir etiqueta, conector e rota." },
           { texto: "Indutivo dianteiro", dica: "Conferir rota e fixação conforme o projeto, sem interferência com componentes móveis.", modelo: "indutivo" },
           { texto: "ICP", dica: "Usar a nomenclatura do diagrama do IR05 e conferir etiqueta, conector e rota." },
@@ -670,7 +670,7 @@ body::after {
           { texto: "Indutivo traseiro", dica: "Conferir rota e fixação conforme o projeto, sem interferência com componentes móveis.", modelo: "indutivo" },
           { texto: "Luz de freio", dica: "Conferir identificação e validar funcionamento pelo procedimento aprovado." },
           { texto: "Temperatura do motor", dica: "Conferir identificação do sensor e correspondência da ligação com o diagrama.", modelo: "temperaturaMotor" },
-          { texto: "Pressão de combustível", dica: "Conferir identificação do sensor e correspondência da ligação com o diagrama.", modelo: "pressaoCombustivel" },
+          { texto: "Pressão de combustível", dica: "Conferir identificação do sensor e correspondência da ligação com o diagrama.", modelo: "pressaoCombustivel", imagens: ["./Editor/imagens/sensores/press_comb.jpeg","./Editor/imagens/sensores/press_comb1.jpeg"]  },
           { texto: "Nível de combustível", dica: "Conferir identificação do sensor e correspondência da ligação com o diagrama." },
           { texto: "Eletroventilador", dica: "Conferir identificação, rota e fixação; validar pelo procedimento aprovado.", modelo: "eletroventilador" },
           { texto: "Bomba de combustível", dica: "Conferir identificação, rota e fixação; validar pelo procedimento aprovado.", modelo: "bomba" },
@@ -823,7 +823,7 @@ body::after {
 
       statusModelo.textContent = `Carregando: ${modelo.nome}…`;
       visualizador.alt = `Modelo 3D: ${modelo.nome}`;
-      visualizador.src = encodeURI(`./Editor/Visualização Web/${modelo.arquivo}`);
+      visualizador.src = encodeURI(`./Editor/modelos3d/${modelo.arquivo}`);
     }
 
     visualizador.addEventListener("load", () => {
@@ -962,5 +962,34 @@ body::after {
 
   })();
   </script>
+  <!-- Início do ajuste de zoom nas imagens -->
+<style>
+  img { cursor: pointer; transition: transform 0.2s; }
+  img:hover { transform: scale(1.03); }
+  #modalZoom {
+    display: none; position: fixed; z-index: 9999; left: 0; top: 0;
+    width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85);
+    justify-content: center; align-items: center;
+  }
+  #modalZoom img { max-width: 90%; max-height: 90%; border-radius: 8px; cursor: default; transform: none; }
+  #modalZoom span { position: absolute; top: 20px; right: 35px; color: #fff; font-size: 40px; cursor: pointer; }
+</style>
+
+<div id="modalZoom" onclick="this.style.display='none'">
+  <span>&times;</span>
+  <img id="imgAmpliada">
+</div>
+
+<script>
+  document.querySelectorAll('img').forEach(img => {
+    if (img.id !== 'imgAmpliada') {
+      img.onclick = () => {
+        document.getElementById('imgAmpliada').src = img.src;
+        document.getElementById('modalZoom').style.display = 'flex';
+      };
+    }
+  });
+</script>
+
 </body>
 </html>
